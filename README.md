@@ -46,7 +46,7 @@ A través de la **geolocalización en tiempo real** y **notificaciones push**, l
 ---
 ## Descripción de la Arquitectura
 
-Tu proyecto ha sido reorganizado siguiendo las **mejores prácticas de Flutter** con una arquitectura escalable y mantenible.
+**mejores prácticas de Flutter** con una arquitectura escalable y mantenible.
 
 ```
 lib/
@@ -83,7 +83,7 @@ lib/
 ## Componentes Principales
 
 ### 1. **Config** (`lib/config/`)
-Define los estilos globales de tu aplicación:
+Define los estilos globales de la aplicación:
 - **app_colors.dart**: Paleta de colores centralizada
 - **app_theme.dart**: Tema Material Design (tipografía, botones, etc.)
 
