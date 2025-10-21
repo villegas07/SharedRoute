@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'splash_screen.dart';
-import 'login_screen.dart';  // ← Agrega esta línea
-import 'home_screen.dart';   // ← Agrega esta línea
+import 'config/app_theme.dart';
+import 'screens/splash/splash_screen.dart';
+import 'screens/login/login_screen.dart';
+import 'screens/home/home_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,11 +16,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'SharedRoute',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const SplashScreen(), // 👈 Inicia aquí
-      // Rutas nombradas para navegar fácilmente
+      theme: AppTheme.lightTheme(),
+      home: const SplashScreen(),
       routes: {
         '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),

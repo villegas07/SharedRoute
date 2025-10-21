@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import '../../config/app_colors.dart';
+import '../../utils/constants.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -12,33 +14,37 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Espera 3 segundos y luego va al login
-    Timer(const Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/login');
+    _navigateToLogin();
+  }
+
+  void _navigateToLogin() {
+    Timer(AppConstants.splashDuration, () {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF4F46E5),
+      backgroundColor: AppColors.primary,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Tu logo aquí
             const Icon(
               Icons.directions_car,
               size: 100,
-              color: Colors.white,
+              color: AppColors.white,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppConstants.paddingL),
             const Text(
-              'SharedRoute',
+              AppConstants.appName,
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: AppColors.white,
                 fontStyle: FontStyle.italic,
               ),
             ),
