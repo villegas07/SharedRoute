@@ -23,8 +23,10 @@ class LoginView extends StatelessWidget {
               _buildHeader(context),
               const SizedBox(height: 48),
               const LoginForm(),
+              const SizedBox(height: 16),
+              _buildForgotPasswordLink(context),
               const SizedBox(height: 24),
-              _buildFooterLinks(context),
+              _buildRegisterLink(context),
             ],
           ),
         ),
@@ -53,25 +55,27 @@ class LoginView extends StatelessWidget {
     );
   }
 
-  Widget _buildFooterLinks(BuildContext context) {
-    return Column(
+  Widget _buildForgotPasswordLink(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton(
+        onPressed: () => context.push(AppRoutes.forgotPassword),
+        child: const Text(AppStrings.forgotPassword),
+      ),
+    );
+  }
+
+  Widget _buildRegisterLink(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        TextButton(
-          onPressed: () => context.push(AppRoutes.forgotPassword),
-          child: const Text(AppStrings.forgotPassword),
+        Text(
+          AppStrings.noAccount,
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              AppStrings.noAccount,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            TextButton(
-              onPressed: () => context.push(AppRoutes.register),
-              child: const Text(AppStrings.registerLink),
-            ),
-          ],
+        TextButton(
+          onPressed: () => context.push(AppRoutes.register),
+          child: const Text(AppStrings.registerLink),
         ),
       ],
     );
