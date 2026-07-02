@@ -21,7 +21,9 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
-    context.read<BookingsListViewModel>().loadBookings();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<BookingsListViewModel>().loadBookings();
+    });
   }
 
   @override

@@ -33,6 +33,15 @@ class UserEntity extends Equatable {
 
   String get displayName => fullName.isNotEmpty ? fullName : '$firstName $lastName';
 
+  String get roleLabel {
+    const labels = {
+      UserRole.passenger: 'Pasajero',
+      UserRole.driver: 'Conductor',
+      UserRole.admin: 'Administrador',
+    };
+    return labels[role] ?? 'Pasajero';
+  }
+
   @override
   List<Object?> get props => [
         id,

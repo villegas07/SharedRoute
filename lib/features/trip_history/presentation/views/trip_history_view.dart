@@ -20,7 +20,9 @@ class _TripHistoryViewState extends State<TripHistoryView> {
   @override
   void initState() {
     super.initState();
-    context.read<TripHistoryViewModel>().loadHistory();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<TripHistoryViewModel>().loadHistory();
+    });
   }
 
   bool _onScroll(ScrollNotification n, TripHistoryViewModel vm) {

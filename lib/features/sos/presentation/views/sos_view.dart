@@ -21,7 +21,9 @@ class _SosViewState extends State<SosView> {
   @override
   void initState() {
     super.initState();
-    context.read<SosViewModel>().loadContacts();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<SosViewModel>().loadContacts();
+    });
   }
 
   @override

@@ -19,10 +19,11 @@ class TripHistoryModel extends TripHistoryEntry {
       id: (json['id'] as String?) ?? '',
       tripId: (json['tripId'] as String?) ?? '',
       userId: (json['userId'] as String?) ?? '',
-      role: HistoryRole.values.firstWhere(
-        (e) => e.name.toUpperCase() == (json['role'] as String?)?.toUpperCase(),
-        orElse: () => HistoryRole.passenger,
-      ),
+      role: const {
+            'PASSENGER': HistoryRole.passenger,
+            'DRIVER': HistoryRole.driver,
+          }[(json['role'] as String?)?.toUpperCase()] ??
+          HistoryRole.passenger,
       originCity: (json['originCity'] as String?) ?? '',
       destinationCity: (json['destinationCity'] as String?) ?? '',
       departureAt: (json['departureAt'] as String?) ?? '',

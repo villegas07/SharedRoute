@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/utils/response_helpers.dart';
 import '../models/geolocation_models.dart';
 
 abstract class GeolocationRemoteDataSource {
@@ -20,7 +21,7 @@ class GeolocationRemoteDataSourceImpl implements GeolocationRemoteDataSource {
         '/geolocation/search-places',
         queryParameters: {'query': query},
       );
-      final list = response.data as List<dynamic>;
+      final list = extractList(response.data);
       return list
           .map((e) => PlacePredictionModel.fromJson(e as Map<String, dynamic>))
           .toList();

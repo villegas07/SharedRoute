@@ -20,7 +20,9 @@ class _BookingsViewState extends State<BookingsView> {
   @override
   void initState() {
     super.initState();
-    context.read<BookingsListViewModel>().loadBookings();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<BookingsListViewModel>().loadBookings();
+    });
   }
 
   @override

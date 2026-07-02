@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/utils/response_helpers.dart';
 import '../models/trip_model.dart';
 import '../../domain/entities/trip_search_params.dart';
 
@@ -21,7 +22,7 @@ class TripRemoteDataSourceImpl implements TripRemoteDataSource {
         '/trips',
         queryParameters: params.toQueryParams(),
       );
-      final list = response.data as List<dynamic>;
+      final list = extractList(response.data);
       return list
           .map((e) => TripModel.fromJson(e as Map<String, dynamic>))
           .toList();

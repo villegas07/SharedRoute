@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/utils/response_helpers.dart';
 import '../../domain/entities/add_contact_params.dart';
 import '../models/emergency_contact_model.dart';
 
@@ -33,7 +34,7 @@ class SosRemoteDataSourceImpl implements SosRemoteDataSource {
   Future<List<EmergencyContactModel>> getEmergencyContacts() async {
     try {
       final response = await _dio.get('/sos/emergency-contacts');
-      final list = response.data as List<dynamic>;
+      final list = extractList(response.data);
       return list
           .map((e) => EmergencyContactModel.fromJson(e as Map<String, dynamic>))
           .toList();

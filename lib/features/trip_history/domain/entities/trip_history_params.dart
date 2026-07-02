@@ -24,7 +24,12 @@ class TripHistoryParams extends Equatable {
       'page': page,
       'pageSize': pageSize,
     };
-    if (role != null) params['role'] = role!.name;
+    if (role != null) {
+      params['role'] = const {
+        HistoryRole.passenger: 'PASSENGER',
+        HistoryRole.driver: 'DRIVER',
+      }[role] ?? 'PASSENGER';
+    }
     if (fromDate != null) params['fromDate'] = fromDate;
     if (toDate != null) params['toDate'] = toDate;
     if (status != null) params['status'] = status;

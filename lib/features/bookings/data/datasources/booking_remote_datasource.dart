@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/utils/response_helpers.dart';
 import '../models/booking_model.dart';
 
 abstract class BookingRemoteDataSource {
@@ -32,7 +33,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   Future<List<BookingModel>> getMyBookings() async {
     try {
       final response = await _dio.get('/bookings/my');
-      final list = response.data as List<dynamic>;
+      final list = extractList(response.data);
       return list
           .map((e) => BookingModel.fromJson(e as Map<String, dynamic>))
           .toList();

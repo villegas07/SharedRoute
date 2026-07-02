@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/utils/response_helpers.dart';
 import '../../domain/entities/create_ticket_params.dart';
+import '../../domain/entities/support_ticket_entity.dart';
 import '../models/support_ticket_model.dart';
 
 abstract class SupportRemoteDataSource {
@@ -21,7 +23,12 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
       await _dio.post('/support/tickets', data: {
         'subject': params.subject,
         'description': params.description,
-        'category': params.category.name,
+        'category': const {
+          TicketCategory.payment: 'PAYMENT',
+          TicketCategory.trip: 'TRIP',
+          TicketCategory.account: 'ACCOUNT',
+          TicketCategory.other: 'OTHER',
+        }[params.category] ?? 'OTHER',
       });
     } on DioException catch (e) {
       throw _mapDioException(e);
@@ -32,7 +39,7 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
   Future<List<SupportTicketModel>> getMyTickets() async {
     try {
       final response = await _dio.get('/support/tickets');
-      final list = response.data as List<dynamic>;
+      final list = extractList(response.data);
       return list
           .map((e) => SupportTicketModel.fromJson(e as Map<String, dynamic>))
           .toList();

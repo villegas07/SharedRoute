@@ -20,7 +20,9 @@ class _SupportTicketsViewState extends State<SupportTicketsView> {
   @override
   void initState() {
     super.initState();
-    context.read<TicketsListViewModel>().loadTickets();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<TicketsListViewModel>().loadTickets();
+    });
   }
 
   @override

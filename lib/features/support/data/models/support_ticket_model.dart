@@ -19,18 +19,20 @@ class SupportTicketModel extends SupportTicketEntity {
       userId: (json['userId'] as String?) ?? '',
       subject: (json['subject'] as String?) ?? '',
       description: (json['description'] as String?) ?? '',
-      status: TicketStatus.values.firstWhere(
-        (e) =>
-            e.name.toUpperCase() ==
-            (json['status'] as String?)?.toUpperCase(),
-        orElse: () => TicketStatus.open,
-      ),
-      category: TicketCategory.values.firstWhere(
-        (e) =>
-            e.name.toUpperCase() ==
-            (json['category'] as String?)?.toUpperCase(),
-        orElse: () => TicketCategory.other,
-      ),
+      status: const {
+            'OPEN': TicketStatus.open,
+            'IN_PROGRESS': TicketStatus.inProgress,
+            'RESOLVED': TicketStatus.resolved,
+            'CLOSED': TicketStatus.closed,
+          }[(json['status'] as String?)?.toUpperCase()] ??
+          TicketStatus.open,
+      category: const {
+            'PAYMENT': TicketCategory.payment,
+            'TRIP': TicketCategory.trip,
+            'ACCOUNT': TicketCategory.account,
+            'OTHER': TicketCategory.other,
+          }[(json['category'] as String?)?.toUpperCase()] ??
+          TicketCategory.other,
       createdAt: (json['createdAt'] as String?) ?? '',
       response: json['response'] as String?,
       updatedAt: json['updatedAt'] as String?,

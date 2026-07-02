@@ -21,7 +21,9 @@ class _UserReviewsViewState extends State<UserReviewsView> {
   @override
   void initState() {
     super.initState();
-    context.read<UserReviewsViewModel>().loadReviews(widget.userId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<UserReviewsViewModel>().loadReviews(widget.userId);
+    });
   }
 
   @override

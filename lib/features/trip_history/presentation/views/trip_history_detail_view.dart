@@ -25,7 +25,9 @@ class _TripHistoryDetailViewState extends State<TripHistoryDetailView> {
   @override
   void initState() {
     super.initState();
-    context.read<TripHistoryDetailViewModel>().loadDetail(widget.tripId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<TripHistoryDetailViewModel>().loadDetail(widget.tripId);
+    });
   }
 
   @override

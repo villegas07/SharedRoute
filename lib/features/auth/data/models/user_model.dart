@@ -39,11 +39,14 @@ class UserModel extends UserEntity {
         if (profilePhotoUrl != null) 'profilePhotoUrl': profilePhotoUrl,
       };
 
-  static UserRole _parseRole(String value) =>
-      UserRole.values.firstWhere(
-        (e) => e.name.toUpperCase() == value.toUpperCase(),
-        orElse: () => UserRole.passenger,
-      );
+  static UserRole _parseRole(String value) {
+    const map = {
+      'PASSENGER': UserRole.passenger,
+      'DRIVER': UserRole.driver,
+      'ADMIN': UserRole.admin,
+    };
+    return map[value.toUpperCase()] ?? UserRole.passenger;
+  }
 
   static UserStatus _parseStatus(String value) {
     const map = {

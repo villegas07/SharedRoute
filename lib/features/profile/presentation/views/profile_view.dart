@@ -22,7 +22,9 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   void initState() {
     super.initState();
-    context.read<ProfileViewModel>().loadProfile();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<ProfileViewModel>().loadProfile();
+    });
   }
 
   @override
@@ -103,7 +105,7 @@ class _ProfileHeader extends StatelessWidget {
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: 4),
-        _RoleBadge(role: user.role.name),
+        _RoleBadge(role: user.roleLabel),
       ],
     );
   }
