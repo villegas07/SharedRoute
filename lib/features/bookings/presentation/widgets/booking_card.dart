@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_strings.dart';
 import '../../../../core/widgets/app_status_chip.dart';
 import '../../domain/entities/booking_entity.dart';
 
@@ -14,28 +13,23 @@ class BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [_shadow()],
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.backgroundWhite,
+        borderRadius: BorderRadius.circular(20),
+        clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _BookingHeader(booking),
-                const SizedBox(height: 16),
-                _BookingMetrics(booking),
-                const SizedBox(height: 16),
-                _BookingFooter(_formatDate(booking.createdAt)),
+                _CardHeader(booking: booking),
+                const SizedBox(height: 14),
+                _RouteIndicator(booking: booking),
+                const SizedBox(height: 14),
+                _CardFooter(booking: booking),
               ],
             ),
           ),
@@ -43,180 +37,223 @@ class BookingCard extends StatelessWidget {
       ),
     );
   }
-
-  BoxShadow _shadow() {
-    return BoxShadow(
-      color: AppColors.primary.withValues(alpha: 0.08),
-      blurRadius: 22,
-      offset: const Offset(0, 10),
-    );
-  }
-
-  String _formatDate(String isoDate) {
-    try {
-      return DateFormat('dd MMM yyyy', 'es_CO').format(DateTime.parse(isoDate));
-    } catch (_) {
-      return isoDate;
-    }
-  }
 }
 
-class _BookingHeader extends StatelessWidget {
+class _CardHeader extends StatelessWidget {
   final BookingEntity booking;
 
-  const _BookingHeader(this.booking);
+  const _CardHeader({required this.booking});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).textTheme;
     return Row(
       children: [
-        const _BookingIcon(),
+        const _TicketIcon(),
         const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Reserva premium',
-                style: theme.bodySmall?.copyWith(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '#${booking.id.substring(0, 8)}',
-                style: theme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
-        ),
-        AppStatusChip(status: _mapStatus(booking.status)),
+        Expanded(child: _HeaderText(booking: booking, theme: theme)),
+        AppStatusChip(status: _status(booking.status)),
       ],
     );
   }
 
-  AppChipStatus _mapStatus(BookingStatus status) => switch (status) {
-        BookingStatus.pending => AppChipStatus.pending,
-        BookingStatus.confirmed => AppChipStatus.confirmed,
-        BookingStatus.cancelledByPassenger =>
-          AppChipStatus.cancelledByPassenger,
-        BookingStatus.cancelledByDriver => AppChipStatus.cancelledByDriver,
-        BookingStatus.completed => AppChipStatus.completed,
-      };
+  AppChipStatus _status(BookingStatus value) {
+    return switch (value) {
+      BookingStatus.pending => AppChipStatus.pending,
+      BookingStatus.confirmed => AppChipStatus.confirmed,
+      BookingStatus.cancelledByPassenger => AppChipStatus.cancelledByPassenger,
+      BookingStatus.cancelledByDriver => AppChipStatus.cancelledByDriver,
+      BookingStatus.completed => AppChipStatus.completed,
+    };
+  }
 }
 
-class _BookingIcon extends StatelessWidget {
-  const _BookingIcon();
+class _TicketIcon extends StatelessWidget {
+  const _TicketIcon();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primaryLight, AppColors.secondaryLight],
-        ),
-        borderRadius: BorderRadius.circular(14),
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: const Icon(
-        Icons.confirmation_number_outlined,
-        size: 20,
+        Icons.confirmation_number_rounded,
         color: AppColors.primary,
+        size: 20,
       ),
     );
   }
 }
 
-class _BookingMetrics extends StatelessWidget {
+class _HeaderText extends StatelessWidget {
   final BookingEntity booking;
+  final TextTheme theme;
 
-  const _BookingMetrics(this.booking);
+  const _HeaderText({required this.booking, required this.theme});
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _MetricChip(Icons.event_seat_rounded, 'Asientos', '${booking.seatsReserved}'),
-        _MetricChip(Icons.payments_outlined, 'Total', _formatPrice(booking.totalPrice)),
-        _MetricChip(Icons.shield_outlined, 'Estado', _statusLabel(booking.status)),
+        Text('Reserva #${booking.id.substring(0, 8)}', style: theme.titleMedium),
+        Text(_formatDate(booking.createdAt), style: theme.bodySmall),
       ],
     );
   }
 
-  String _formatPrice(double price) {
-    return NumberFormat.currency(
-      locale: 'es_CO',
-      symbol: '\$',
-      decimalDigits: 0,
-    ).format(price);
-  }
-
-  String _statusLabel(BookingStatus status) {
-    return switch (status) {
-      BookingStatus.pending => 'Pendiente',
-      BookingStatus.confirmed => 'Confirmada',
-      BookingStatus.cancelledByPassenger => 'Cancelada',
-      BookingStatus.cancelledByDriver => 'Cancelada',
-      BookingStatus.completed => 'Completada',
-    };
+  String _formatDate(String value) {
+    final date = DateTime.tryParse(value);
+    if (date == null) return value;
+    return DateFormat('dd MMM yyyy', 'es').format(date);
   }
 }
 
-class _MetricChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
+class _RouteIndicator extends StatelessWidget {
+  final BookingEntity booking;
 
-  const _MetricChip(this.icon, this.label, this.value);
+  const _RouteIndicator({required this.booking});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.backgroundAlt,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: AppColors.primary),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: theme.bodySmall?.copyWith(color: AppColors.textSecondary)),
-              Text(value, style: theme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
-            ],
-          ),
+          const _RouteDots(),
+          const SizedBox(width: 14),
+          Expanded(child: _RouteText(booking: booking, theme: theme)),
         ],
       ),
     );
   }
 }
 
-class _BookingFooter extends StatelessWidget {
-  final String date;
+class _RouteDots extends StatelessWidget {
+  const _RouteDots();
 
-  const _BookingFooter(this.date);
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const _Dot(color: AppColors.success),
+        Container(
+          width: 2,
+          height: 20,
+          color: AppColors.textDisabled.withValues(alpha: 0.3),
+        ),
+        const _Dot(color: AppColors.accentCoral),
+      ],
+    );
+  }
+}
+
+class _Dot extends StatelessWidget {
+  final Color color;
+
+  const _Dot({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}
+
+class _RouteText extends StatelessWidget {
+  final BookingEntity booking;
+  final TextTheme theme;
+
+  const _RouteText({required this.booking, required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _RouteLabel(label: 'Trayecto', value: _tripLabel()),
+        const SizedBox(height: 8),
+        _RouteLabel(label: 'Pasajero', value: _passengerLabel()),
+      ],
+    );
+  }
+
+  String _tripLabel() {
+    return booking.tripId.isEmpty ? 'Viaje por confirmar' : 'Viaje #${booking.tripId.substring(0, 8)}';
+  }
+
+  String _passengerLabel() {
+    if (booking.passengerId.isEmpty) return 'Perfil pendiente';
+    return 'Usuario #${booking.passengerId.substring(0, 8)}';
+  }
+}
+
+class _RouteLabel extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _RouteLabel({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: theme.bodySmall?.copyWith(color: AppColors.textSecondary)),
+        Text(value, style: theme.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ],
+    );
+  }
+}
+
+class _CardFooter extends StatelessWidget {
+  final BookingEntity booking;
+
+  const _CardFooter({required this.booking});
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(
-          '${AppStrings.totalPrice} y detalles',
-          style: theme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
+        const Icon(
+          Icons.airline_seat_recline_normal_rounded,
+          size: 16,
+          color: AppColors.textSecondary,
         ),
+        const SizedBox(width: 4),
+        Text('${booking.seatsReserved} asiento(s)', style: Theme.of(context).textTheme.bodySmall),
         const Spacer(),
-        Text(date, style: theme.bodySmall?.copyWith(color: AppColors.textSecondary)),
+        if (booking.totalPrice > 0) _PriceText(price: booking.totalPrice),
       ],
+    );
+  }
+}
+
+class _PriceText extends StatelessWidget {
+  final double price;
+
+  const _PriceText({required this.price});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      '\$${price.toStringAsFixed(0)}',
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w800,
+          ),
     );
   }
 }

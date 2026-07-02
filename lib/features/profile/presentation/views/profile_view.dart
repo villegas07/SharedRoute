@@ -32,18 +32,19 @@ class _ProfileViewState extends State<ProfileView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Consumer<ProfileViewModel>(
-        builder: (context, vm, _) => switch (vm.status) {
-          ProfileStatus.loading ||
-          ProfileStatus.initial => const AppInlineLoading(),
-          ProfileStatus.error => AppErrorState(
-            message: vm.errorMessage ?? AppStrings.errorOccurred,
-            onRetry: vm.loadProfile,
-          ),
-          _ => _ProfileBody(user: vm.user!),
-        },
-      ),
+      body: Consumer<ProfileViewModel>(builder: _buildState),
     );
+  }
+
+  Widget _buildState(BuildContext context, ProfileViewModel vm, Widget? child) {
+    return switch (vm.status) {
+      ProfileStatus.loading || ProfileStatus.initial => const AppInlineLoading(),
+      ProfileStatus.error => AppErrorState(
+          message: vm.errorMessage ?? AppStrings.errorOccurred,
+          onRetry: vm.loadProfile,
+        ),
+      _ => _ProfileBody(user: vm.user!),
+    };
   }
 }
 
@@ -54,63 +55,29 @@ class _ProfileBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          _ProfileHeader(user: user),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-            child: Column(
-              children: [
-                _StatsRow(user: user),
-                const SizedBox(height: 18),
-                _ContactCard(user: user),
-                const SizedBox(height: 18),
-                _SectionCard(
-                  title: 'Actividad',
-                  children: [
-                    _MenuItem(
-                      icon: Icons.history_rounded,
-                      label: AppStrings.tripHistory,
-                      color: AppColors.primary,
-                      onTap: () => context.push(AppRoutes.tripHistory),
-                    ),
-                    _MenuItem(
-                      icon: Icons.star_outline_rounded,
-                      label: AppStrings.myReviews,
-                      color: AppColors.accentAmber,
-                      onTap: () => context.push(
-                        AppRoutes.userReviews.replaceFirst(':userId', user.id),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                _SectionCard(
-                  title: 'Ayuda y seguridad',
-                  children: [
-                    _MenuItem(
-                      icon: Icons.sos_rounded,
-                      label: AppStrings.sos,
-                      color: AppColors.accentCoral,
-                      onTap: () => context.push(AppRoutes.sos),
-                    ),
-                    _MenuItem(
-                      icon: Icons.support_agent_rounded,
-                      label: AppStrings.support,
-                      color: AppColors.secondary,
-                      onTap: () => context.push(AppRoutes.supportTickets),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                const _LogoutButton(),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(child: _ProfileHeader(user: user)),
+        const _SliverGap(24),
+        SliverToBoxAdapter(child: _StatsRow(user: user)),
+        const _SliverGap(24),
+        SliverToBoxAdapter(child: _MenuSection(user: user)),
+        const _SliverGap(24),
+        const SliverToBoxAdapter(child: _LogoutButton()),
+        const _SliverGap(40),
+      ],
     );
+  }
+}
+
+class _SliverGap extends StatelessWidget {
+  final double height;
+
+  const _SliverGap(this.height);
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(child: SizedBox(height: height));
   }
 }
 
@@ -121,160 +88,95 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final topInset = MediaQuery.of(context).padding.top;
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, topInset + 12, 20, 28),
+      padding: const EdgeInsets.fromLTRB(20, 60, 20, 32),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [AppColors.primary, AppColors.secondary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(34),
-          bottomRight: Radius.circular(34),
-        ),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
       ),
-      child: Column(
-        children: [
-          _HeaderBar(onEdit: () => context.push(AppRoutes.editProfile)),
-          const SizedBox(height: 18),
-          _AvatarFrame(user: user),
-          const SizedBox(height: 14),
-          _HeaderName(user: user),
-          const SizedBox(height: 6),
-          _HeaderEmail(user: user),
-          const SizedBox(height: 12),
-          _RoleBadge(role: user.roleLabel),
-        ],
+      child: SafeArea(
+        bottom: false,
+        child: _HeaderContent(user: user),
       ),
     );
   }
 }
 
-class _HeaderBar extends StatelessWidget {
-  final VoidCallback onEdit;
+class _HeaderContent extends StatelessWidget {
+  final UserEntity user;
 
-  const _HeaderBar({required this.onEdit});
+  const _HeaderContent({required this.user});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Text(
-          'Mi perfil',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-          ),
+        AppAvatar(
+          imageUrl: user.profilePhotoUrl,
+          name: user.displayName,
+          size: AppAvatarSize.large,
         ),
-        const Spacer(),
-        _HeaderIconButton(icon: Icons.edit_rounded, onTap: onEdit),
+        const SizedBox(height: 16),
+        _HeaderIdentity(user: user),
+        const SizedBox(height: 12),
+        _StatusBadge(status: user.roleLabel),
       ],
     );
   }
 }
 
-class _HeaderIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
+class _HeaderIdentity extends StatelessWidget {
+  final UserEntity user;
 
-  const _HeaderIconButton({required this.icon, required this.onTap});
+  const _HeaderIdentity({required this.user});
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withValues(alpha: 0.18),
-      shape: const CircleBorder(),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Icon(icon, color: Colors.white),
+    return Column(
+      children: [
+        Text(
+          user.displayName,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+              ),
         ),
-      ),
+        const SizedBox(height: 4),
+        Text(
+          user.email,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.white70,
+              ),
+        ),
+      ],
     );
   }
 }
 
-class _AvatarFrame extends StatelessWidget {
-  final UserEntity user;
+class _StatusBadge extends StatelessWidget {
+  final String status;
 
-  const _AvatarFrame({required this.user});
+  const _StatusBadge({required this.status});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-      ),
-      child: AppAvatar(
-        imageUrl: user.profilePhotoUrl,
-        name: user.displayName,
-        size: AppAvatarSize.large,
-      ),
-    );
-  }
-}
-
-class _HeaderName extends StatelessWidget {
-  final UserEntity user;
-
-  const _HeaderName({required this.user});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      user.displayName,
-      textAlign: TextAlign.center,
-      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-        color: Colors.white,
-        fontWeight: FontWeight.w700,
-      ),
-    );
-  }
-}
-
-class _HeaderEmail extends StatelessWidget {
-  final UserEntity user;
-
-  const _HeaderEmail({required this.user});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      user.email,
-      textAlign: TextAlign.center,
-      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-        color: Colors.white.withValues(alpha: 0.82),
-      ),
-    );
-  }
-}
-
-class _RoleBadge extends StatelessWidget {
-  final String role;
-
-  const _RoleBadge({required this.role});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(999),
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white30),
       ),
       child: Text(
-        role,
+        status,
         style: const TextStyle(
           color: Colors.white,
-          fontWeight: FontWeight.w700,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -288,43 +190,68 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _SurfaceCard(
-      child: Row(
-        children: [
-          Expanded(
-            child: _StatItem(
-              icon: Icons.star_rounded,
-              value: user.averageRating.toStringAsFixed(1),
-              label: AppStrings.rating,
-              color: AppColors.accentAmber,
-            ),
-          ),
-          const _StatDivider(),
-          Expanded(
-            child: _StatItem(
-              icon: Icons.badge_rounded,
-              value: user.roleLabel,
-              label: 'Perfil',
-              color: AppColors.primary,
-            ),
-          ),
-          const _StatDivider(),
-          Expanded(
-            child: _StatItem(
-              icon: Icons.calendar_month_rounded,
-              value: _memberYear(user.createdAt),
-              label: 'Desde',
-              color: AppColors.secondary,
-            ),
-          ),
-        ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: _CardSurface(child: _StatsContent(user: user)),
     );
   }
+}
 
-  String _memberYear(String value) {
-    if (value.length >= 4) return value.substring(0, 4);
-    return '—';
+class _StatsContent extends StatelessWidget {
+  final UserEntity user;
+
+  const _StatsContent({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _StatItem(
+            icon: Icons.star_rounded,
+            color: AppColors.accentAmber,
+            value: user.averageRating.toStringAsFixed(1),
+            label: 'Rating',
+          ),
+        ),
+        const _StatDivider(),
+        Expanded(child: _PhoneStat(user: user)),
+        const _StatDivider(),
+        Expanded(child: _VerifiedStat(user: user)),
+      ],
+    );
+  }
+}
+
+class _PhoneStat extends StatelessWidget {
+  final UserEntity user;
+
+  const _PhoneStat({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return _StatItem(
+      icon: Icons.phone_rounded,
+      color: AppColors.secondary,
+      value: user.phone.isNotEmpty ? '✓' : '—',
+      label: 'Teléfono',
+    );
+  }
+}
+
+class _VerifiedStat extends StatelessWidget {
+  final UserEntity user;
+
+  const _VerifiedStat({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return _StatItem(
+      icon: Icons.verified_rounded,
+      color: AppColors.success,
+      value: user.status == UserStatus.active ? '✓' : '—',
+      label: 'Verificado',
+    );
   }
 }
 
@@ -333,26 +260,21 @@ class _StatDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 44,
-      color: AppColors.backgroundAlt,
-      margin: const EdgeInsets.symmetric(horizontal: 6),
-    );
+    return Container(width: 1, height: 40, color: AppColors.backgroundAlt);
   }
 }
 
 class _StatItem extends StatelessWidget {
   final IconData icon;
+  final Color color;
   final String value;
   final String label;
-  final Color color;
 
   const _StatItem({
     required this.icon,
+    required this.color,
     required this.value,
     required this.label,
-    required this.color,
   });
 
   @override
@@ -360,227 +282,147 @@ class _StatItem extends StatelessWidget {
     return Column(
       children: [
         Icon(icon, color: color, size: 22),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
           value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
         ),
-        const SizedBox(height: 4),
         Text(label, style: Theme.of(context).textTheme.bodySmall),
       ],
     );
   }
 }
 
-class _ContactCard extends StatelessWidget {
+class _MenuSection extends StatelessWidget {
   final UserEntity user;
 
-  const _ContactCard({required this.user});
+  const _MenuSection({required this.user});
 
   @override
   Widget build(BuildContext context) {
-    return _SurfaceCard(
-      child: Column(
-        children: [
-          _CardTitle(title: 'Información personal'),
-          const SizedBox(height: 14),
-          _InfoRow(
-            icon: Icons.mail_outline_rounded,
-            label: AppStrings.email,
-            value: user.email,
-          ),
-          const SizedBox(height: 14),
-          _InfoRow(
-            icon: Icons.phone_rounded,
-            label: AppStrings.phone,
-            value: user.phone.isEmpty ? 'No registrado' : user.phone,
-          ),
-        ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: _CardSurface(child: _MenuContent(user: user)),
     );
   }
 }
 
-class _CardTitle extends StatelessWidget {
-  final String title;
+class _MenuContent extends StatelessWidget {
+  final UserEntity user;
 
-  const _CardTitle({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _InfoIcon(icon: icon),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _InfoText(label: label, value: value),
-        ),
-      ],
-    );
-  }
-}
-
-class _InfoIcon extends StatelessWidget {
-  final IconData icon;
-
-  const _InfoIcon({required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundAlt,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Icon(icon, color: AppColors.primary),
-    );
-  }
-}
-
-class _InfoText extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _InfoText({required this.label, required this.value});
+  const _MenuContent({required this.user});
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
+        _MenuItem(
+          icon: Icons.history_rounded,
+          label: 'Historial de viajes',
+          onTap: () => context.push(AppRoutes.tripHistory),
+        ),
+        const _MenuDivider(),
+        _MenuItem(
+          icon: Icons.star_outline_rounded,
+          label: 'Mis reseñas',
+          onTap: () => context.push(_reviewRoute(user.id)),
+        ),
+        const _MenuDivider(),
+        _MenuItem(
+          icon: Icons.shield_outlined,
+          label: 'Emergencia SOS',
+          iconColor: AppColors.accentCoral,
+          onTap: () => context.push(AppRoutes.sos),
+        ),
+        const _MenuDivider(),
+        _MenuItem(
+          icon: Icons.headset_mic_outlined,
+          label: 'Soporte',
+          onTap: () => context.push(AppRoutes.supportTickets),
         ),
       ],
     );
   }
+
+  String _reviewRoute(String userId) {
+    return AppRoutes.userReviews.replaceFirst(':userId', userId);
+  }
 }
 
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-
-  const _SectionCard({required this.title, required this.children});
+class _MenuDivider extends StatelessWidget {
+  const _MenuDivider();
 
   @override
   Widget build(BuildContext context) {
-    return _SurfaceCard(
-      child: Column(
-        children: [
-          _CardTitle(title: title),
-          const SizedBox(height: 10),
-          ..._withDividers(children),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _withDividers(List<Widget> items) {
-    return items.asMap().entries.expand((entry) {
-      final isLast = entry.key == items.length - 1;
-      final divider = const Divider(height: 1, indent: 54);
-      return isLast ? [entry.value] : [entry.value, divider];
-    }).toList();
+    return const Divider(height: 1, indent: 56);
   }
 }
 
 class _MenuItem extends StatelessWidget {
   final IconData icon;
   final String label;
-  final Color color;
+  final Color? iconColor;
   final VoidCallback onTap;
 
   const _MenuItem({
     required this.icon,
     required this.label,
-    required this.color,
+    this.iconColor,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Icon(icon, color: color, size: 22),
-      ),
-      title: Text(
-        label,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      onTap: onTap,
+      leading: _MenuIcon(icon: icon, color: iconColor ?? AppColors.primary),
+      title: Text(label, style: Theme.of(context).textTheme.titleMedium),
       trailing: const Icon(
         Icons.chevron_right_rounded,
         color: AppColors.textDisabled,
       ),
-      onTap: onTap,
     );
   }
 }
 
-class _SurfaceCard extends StatelessWidget {
-  final Widget child;
+class _MenuIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
 
-  const _SurfaceCard({required this.child});
+  const _MenuIcon({required this.icon, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(icon, color: color, size: 20),
+    );
+  }
+}
+
+class _CardSurface extends StatelessWidget {
+  final Widget child;
+
+  const _CardSurface({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 22,
-            offset: Offset(0, 10),
+            color: Color(0x0A000000),
+            blurRadius: 16,
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -594,45 +436,54 @@ class _LogoutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: OutlinedButton.icon(
         onPressed: () => _confirmLogout(context),
-        icon: const Icon(Icons.logout_rounded, color: AppColors.error),
-        label: const Text(
-          AppStrings.logout,
-          style: TextStyle(color: AppColors.error),
-        ),
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: AppColors.accentCoralLight),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          backgroundColor: AppColors.backgroundWhite,
-        ),
+        style: _buttonStyle(),
+        icon: const Icon(Icons.logout_rounded),
+        label: const Text(AppStrings.logout),
       ),
     );
   }
 
+  ButtonStyle _buttonStyle() {
+    return OutlinedButton.styleFrom(
+      foregroundColor: AppColors.accentCoral,
+      side: BorderSide(color: AppColors.accentCoral.withValues(alpha: 0.3)),
+    );
+  }
+
   void _confirmLogout(BuildContext context) {
-    showDialog(
+    showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text(AppStrings.logoutConfirm),
-        content: const Text(AppStrings.logoutMessage),
-        actions: [
-          TextButton(
-            onPressed: () => ctx.pop(),
-            child: const Text(AppStrings.cancel),
-          ),
-          TextButton(
-            onPressed: () {
-              ctx.pop();
-              context.read<AuthViewModel>().logout();
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text(AppStrings.confirm),
-          ),
-        ],
-      ),
+      builder: (_) => const _LogoutDialog(),
+    ).then((confirmed) {
+      if (confirmed == true && context.mounted) {
+        context.read<AuthViewModel>().logout();
+      }
+    });
+  }
+}
+
+class _LogoutDialog extends StatelessWidget {
+  const _LogoutDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Cerrar sesión'),
+      content: const Text('¿Estás seguro de que deseas salir?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: const Text('Salir'),
+        ),
+      ],
     );
   }
 }

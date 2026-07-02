@@ -223,110 +223,127 @@ class _HeroText extends StatelessWidget {
   }
 }
 
-class _SosActionButton extends StatelessWidget {
+class _SosActionButton extends StatefulWidget {
   final SosViewModel vm;
 
   const _SosActionButton({required this.vm});
 
   @override
+  State<_SosActionButton> createState() => _SosActionButtonState();
+}
+
+class _SosActionButtonState extends State<_SosActionButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _pulseCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isSending = vm.alertStatus == AlertStatus.sending;
-    return GestureDetector(
-      onTap: isSending ? null : vm.triggerAlert,
-      child: Stack(
-        alignment: Alignment.center,
-        children: const [
-          _PulseRing(size: 212, opacity: 0.16),
-          _PulseRing(size: 176, opacity: 0.26),
-          _ActionCore(),
-        ],
-      ),
+    final isSending = widget.vm.alertStatus == AlertStatus.sending;
+    return AnimatedBuilder(
+      animation: _pulseCtrl,
+      builder: (context, child) => _buildPulseButton(isSending),
     );
   }
+
+  Widget _buildPulseButton(bool isSending) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        _PulseRing(value: _pulseCtrl.value, delay: 0),
+        _PulseRing(value: _pulseCtrl.value, delay: 0.33),
+        _PulseRing(value: _pulseCtrl.value, delay: 0.66),
+        _SosButton(isSending: isSending, onTap: _sendAlert),
+      ],
+    );
+  }
+
+  void _sendAlert() => widget.vm.sendAlert();
 }
 
 class _PulseRing extends StatelessWidget {
-  final double size;
-  final double opacity;
+  final double value;
+  final double delay;
 
-  const _PulseRing({required this.size, required this.opacity});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: opacity),
-      ),
-    );
-  }
-}
-
-class _ActionCore extends StatelessWidget {
-  const _ActionCore();
+  const _PulseRing({required this.value, required this.delay});
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<SosViewModel>();
-    final isSending = vm.alertStatus == AlertStatus.sending;
-    return Container(
-      width: 144,
-      height: 144,
-      decoration: _decoration,
-      child: isSending ? const _SendingLoader() : const _SosLabel(),
-    );
-  }
-
-  BoxDecoration get _decoration {
-    return BoxDecoration(
-      shape: BoxShape.circle,
-      color: Colors.white,
-      border: Border.all(color: Colors.white.withValues(alpha: 0.7), width: 6),
-      boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 24)],
-    );
-  }
-}
-
-class _SendingLoader extends StatelessWidget {
-  const _SendingLoader();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: SizedBox(
-        width: 42,
-        height: 42,
-        child: CircularProgressIndicator(
-          strokeWidth: 4,
-          color: AppColors.error,
+    final progress = ((value + delay) % 1.0);
+    final scale = 1.0 + progress * 0.5;
+    final opacity = (1.0 - progress).clamp(0.0, 0.4);
+    return Transform.scale(
+      scale: scale,
+      child: Container(
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white.withValues(alpha: opacity),
+            width: 2,
+          ),
         ),
       ),
     );
   }
 }
 
-class _SosLabel extends StatelessWidget {
-  const _SosLabel();
+class _SosButton extends StatelessWidget {
+  final bool isSending;
+  final VoidCallback onTap;
+
+  const _SosButton({required this.isSending, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.sos_rounded, size: 42, color: AppColors.error),
-          SizedBox(height: 6),
-          Text(
-            'SOS',
-            style: TextStyle(
-              color: AppColors.error,
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
+    return Material(
+      color: Colors.white,
+      shape: const CircleBorder(),
+      elevation: 8,
+      shadowColor: Colors.black26,
+      child: InkWell(
+        onTap: isSending ? null : onTap,
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 80,
+          height: 80,
+          alignment: Alignment.center,
+          child: isSending ? _loadingIcon() : _sosIcon(),
+        ),
+      ),
+    );
+  }
+
+  Widget _sosIcon() {
+    return const Icon(
+      Icons.sos_rounded,
+      color: AppColors.error,
+      size: 36,
+    );
+  }
+
+  Widget _loadingIcon() {
+    return const SizedBox(
+      width: 28,
+      height: 28,
+      child: CircularProgressIndicator(
+        color: AppColors.error,
+        strokeWidth: 3,
       ),
     );
   }

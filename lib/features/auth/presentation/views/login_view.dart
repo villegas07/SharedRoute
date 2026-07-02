@@ -6,16 +6,42 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/router/app_routes.dart';
 import '../widgets/login_form.dart';
 
-class LoginView extends StatelessWidget {
+class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
   @override
+  State<LoginView> createState() => _LoginViewState();
+}
+
+class _LoginViewState extends State<LoginView>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _animCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.backgroundAlt,
+    return Scaffold(
+      backgroundColor: AppColors.background,
       body: SingleChildScrollView(
         child: Column(
-          children: [_GradientHeader(), _LoginContent()],
+          children: [
+            const _GradientHeader(),
+            _AnimatedLoginContent(animation: _animCtrl),
+          ],
         ),
       ),
     );
@@ -30,16 +56,14 @@ class _GradientHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(24, _topPadding(context), 24, 84),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primaryDark, AppColors.primary, AppColors.secondary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
-      ),
-      child: const Stack(
-        children: [_HeaderGlow(Alignment.topRight), _HeaderContent()],
+      decoration: _headerDecoration(),
+      child: const Column(
+        children: [
+          SizedBox(height: 12),
+          _BrandMark(),
+          SizedBox(height: 24),
+          _HeaderText(),
+        ],
       ),
     );
   }
@@ -47,41 +71,15 @@ class _GradientHeader extends StatelessWidget {
   double _topPadding(BuildContext context) {
     return MediaQuery.paddingOf(context).top + 32;
   }
-}
 
-class _HeaderGlow extends StatelessWidget {
-  final Alignment alignment;
-
-  const _HeaderGlow(this.alignment);
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: alignment,
-      child: Container(
-        width: 140,
-        height: 140,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.12),
-          shape: BoxShape.circle,
-        ),
+  BoxDecoration _headerDecoration() {
+    return const BoxDecoration(
+      gradient: LinearGradient(
+        colors: [AppColors.primaryDark, AppColors.primary, AppColors.secondary],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
       ),
-    );
-  }
-}
-
-class _HeaderContent extends StatelessWidget {
-  const _HeaderContent();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: const [
-        SizedBox(height: 12),
-        _BrandMark(),
-        SizedBox(height: 24),
-        _HeaderText(),
-      ],
+      borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
     );
   }
 }
@@ -91,18 +89,11 @@ class _BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-      ),
-      child: const Icon(
-        Icons.directions_car_rounded,
-        size: 44,
-        color: Colors.white,
-      ),
+    return Image.asset(
+      'assets/images/logo.png',
+      width: 200,
+      height: 200,
+      fit: BoxFit.contain,
     );
   }
 }
@@ -124,10 +115,8 @@ class _HeaderText extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          'Accede a una experiencia de viaje segura y elegante.',
-          style: theme.bodyLarge?.copyWith(
-            color: Colors.white.withValues(alpha: 0.8),
-          ),
+          'Tu viaje compartido, reinventado.',
+          style: theme.bodyLarge?.copyWith(color: Colors.white70),
           textAlign: TextAlign.center,
         ),
       ],
@@ -135,18 +124,34 @@ class _HeaderText extends StatelessWidget {
   }
 }
 
-class _LoginContent extends StatelessWidget {
-  const _LoginContent();
+class _AnimatedLoginContent extends StatelessWidget {
+  final AnimationController animation;
+
+  const _AnimatedLoginContent({required this.animation});
 
   @override
   Widget build(BuildContext context) {
-    return Transform.translate(
-      offset: const Offset(0, -42),
-      child: const Padding(
-        padding: EdgeInsets.fromLTRB(20, 0, 20, 24),
-        child: _LoginCard(),
+    return FadeTransition(
+      opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+      child: SlideTransition(
+        position: _slide(),
+        child: ScaleTransition(scale: _scale(), child: const _LoginCard()),
       ),
     );
+  }
+
+  Animation<Offset> _slide() {
+    return Tween(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+  }
+
+  Animation<double> _scale() {
+    return Tween(
+      begin: 0.96,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutBack));
   }
 }
 
@@ -155,31 +160,50 @@ class _LoginCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.12),
-            blurRadius: 30,
-            offset: const Offset(0, 16),
-          ),
-        ],
+    return Transform.translate(
+      offset: const Offset(0, -42),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          decoration: _cardDecoration(),
+          child: const _LoginCardBody(),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: const [
-          _SectionIntro(),
-          SizedBox(height: 24),
-          LoginForm(),
-          SizedBox(height: 8),
-          _ForgotLink(),
-          SizedBox(height: 28),
-          _RegisterLink(),
-        ],
-      ),
+    );
+  }
+
+  BoxDecoration _cardDecoration() {
+    return BoxDecoration(
+      color: AppColors.backgroundWhite,
+      borderRadius: BorderRadius.circular(28),
+      boxShadow: [
+        BoxShadow(
+          color: AppColors.primary.withValues(alpha: 0.1),
+          blurRadius: 30,
+          offset: const Offset(0, 16),
+        ),
+      ],
+    );
+  }
+}
+
+class _LoginCardBody extends StatelessWidget {
+  const _LoginCardBody();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionIntro(),
+        SizedBox(height: 24),
+        LoginForm(),
+        SizedBox(height: 8),
+        _ForgotLink(),
+        SizedBox(height: 28),
+        _RegisterLink(),
+      ],
     );
   }
 }
@@ -195,11 +219,11 @@ class _SectionIntro extends StatelessWidget {
       children: [
         Text(
           AppStrings.login,
-          style: theme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
+          style: theme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 8),
         Text(
-          'Gestiona tus rutas, reservas y pagos desde un solo lugar.',
+          'Ingresa para gestionar tus rutas y reservas.',
           style: theme.bodyMedium?.copyWith(color: AppColors.textSecondary),
         ),
       ],
@@ -227,11 +251,13 @@ class _RegisterLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context).textTheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(AppStrings.noAccount, style: theme.bodyMedium),
+        Text(
+          AppStrings.noAccount,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
         TextButton(
           onPressed: () => context.push(AppRoutes.register),
           child: const Text(

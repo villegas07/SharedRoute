@@ -6,7 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/widgets/app_error_state.dart';
-import '../../../../core/widgets/app_loading.dart';
+import '../../../../core/widgets/app_card_shimmer.dart';
 import '../viewmodels/bookings_list_viewmodel.dart';
 import '../widgets/booking_card.dart';
 
@@ -33,7 +33,10 @@ class _BookingsViewState extends State<BookingsView> {
       body: Consumer<BookingsListViewModel>(
         builder: (context, vm, _) => switch (vm.status) {
           BookingsListStatus.loading ||
-          BookingsListStatus.initial => const AppInlineLoading(),
+          BookingsListStatus.initial => const Padding(
+            padding: EdgeInsets.all(20),
+            child: AppCardShimmer(),
+          ),
           BookingsListStatus.error => _BookingsShell(
             count: vm.bookings.length,
             child: AppErrorState(
