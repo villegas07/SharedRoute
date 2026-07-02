@@ -69,6 +69,8 @@ class _ProfileContent extends StatelessWidget {
           const SizedBox(height: 24),
           _ProfileStats(user: user),
           const SizedBox(height: 24),
+          _MoreOptions(userId: user.id),
+          const SizedBox(height: 16),
           _ProfileActions(),
         ],
       ),
@@ -191,6 +193,52 @@ class _StatItem extends StatelessWidget {
           Text(label, style: Theme.of(context).textTheme.bodyMedium),
         ],
       );
+}
+
+class _MoreOptions extends StatelessWidget {
+  final String userId;
+
+  const _MoreOptions({required this.userId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.history, color: AppColors.primary),
+            title: const Text(AppStrings.tripHistory),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(AppRoutes.tripHistory),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.star_outline, color: AppColors.accentAmber),
+            title: const Text(AppStrings.myReviews),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(
+              AppRoutes.userReviews.replaceFirst(':userId', userId),
+            ),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.warning_amber_rounded, color: AppColors.error),
+            title: const Text(AppStrings.sos),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(AppRoutes.sos),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.support_agent, color: AppColors.secondary),
+            title: const Text(AppStrings.support),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(AppRoutes.supportTickets),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ProfileActions extends StatelessWidget {

@@ -75,6 +75,40 @@ abstract final class AppStrings {
   static const String cancel = 'Cancelar';
   static const String confirm = 'Confirmar';
 
+  // Trip History
+  static const String tripHistory = 'Historial de viajes';
+  static const String noTripHistory = 'Sin historial de viajes';
+
+  // Reviews
+  static const String leaveReview = 'Dejar reseña';
+  static const String myReviews = 'Mis reseñas';
+  static const String reviewComment = 'Comentario (opcional)';
+  static const String reviewSent = 'Reseña enviada';
+  static const String rating = 'Calificación';
+
+  // SOS
+  static const String sos = 'SOS';
+  static const String emergencyContacts = 'Contactos de emergencia';
+  static const String addContact = 'Agregar contacto';
+  static const String triggerAlert = 'Enviar alerta de emergencia';
+  static const String alertSent = 'Alerta enviada';
+  static const String contactName = 'Nombre';
+  static const String contactPhone = 'Teléfono';
+  static const String contactRelationship = 'Relación';
+  static const String noEmergencyContacts = 'Sin contactos de emergencia';
+  static const String deleteContactConfirm = '¿Eliminar contacto?';
+
+  // Support
+  static const String support = 'Soporte';
+  static const String supportTickets = 'Mis tickets';
+  static const String newTicket = 'Nuevo ticket';
+  static const String ticketSubject = 'Asunto';
+  static const String ticketDescription = 'Descripción';
+  static const String ticketCategory = 'Categoría';
+  static const String ticketSent = 'Ticket enviado';
+  static const String noTickets = 'Sin tickets de soporte';
+  static const String ticketResponse = 'Respuesta del soporte';
+
   // States
   static const String loading = 'Cargando...';
   static const String retry = 'Reintentar';

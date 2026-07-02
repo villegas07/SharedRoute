@@ -18,6 +18,24 @@ import '../../features/home/presentation/views/main_scaffold.dart';
 import '../../features/profile/presentation/viewmodels/profile_viewmodel.dart';
 import '../../features/profile/presentation/views/edit_profile_view.dart';
 import '../../features/profile/presentation/views/profile_view.dart';
+import '../../features/reviews/presentation/viewmodels/create_review_viewmodel.dart';
+import '../../features/reviews/presentation/viewmodels/user_reviews_viewmodel.dart';
+import '../../features/reviews/presentation/views/create_review_view.dart';
+import '../../features/reviews/presentation/views/user_reviews_view.dart';
+import '../../features/sos/presentation/viewmodels/add_contact_viewmodel.dart';
+import '../../features/sos/presentation/viewmodels/sos_viewmodel.dart';
+import '../../features/sos/presentation/views/add_emergency_contact_view.dart';
+import '../../features/sos/presentation/views/sos_view.dart';
+import '../../features/support/presentation/viewmodels/create_ticket_viewmodel.dart';
+import '../../features/support/presentation/viewmodels/ticket_detail_viewmodel.dart';
+import '../../features/support/presentation/viewmodels/tickets_list_viewmodel.dart';
+import '../../features/support/presentation/views/create_ticket_view.dart';
+import '../../features/support/presentation/views/support_ticket_detail_view.dart';
+import '../../features/support/presentation/views/support_tickets_view.dart';
+import '../../features/trip_history/presentation/viewmodels/trip_history_detail_viewmodel.dart';
+import '../../features/trip_history/presentation/viewmodels/trip_history_viewmodel.dart';
+import '../../features/trip_history/presentation/views/trip_history_detail_view.dart';
+import '../../features/trip_history/presentation/views/trip_history_view.dart';
 import '../../features/trips/presentation/viewmodels/trip_detail_viewmodel.dart';
 import '../../features/trips/presentation/viewmodels/trip_search_viewmodel.dart';
 import '../../features/trips/presentation/views/trip_detail_view.dart';
@@ -116,6 +134,73 @@ final class AppRouter {
           builder: (context, state) => ChangeNotifierProvider(
             create: (_) => sl<ProfileViewModel>()..loadProfile(),
             child: const EditProfileView(),
+          ),
+        ),
+        GoRoute(
+          path: AppRoutes.tripHistory,
+          builder: (context, state) => ChangeNotifierProvider(
+            create: (_) => sl<TripHistoryViewModel>(),
+            child: const TripHistoryView(),
+          ),
+        ),
+        GoRoute(
+          path: AppRoutes.tripHistoryDetail,
+          builder: (context, state) => ChangeNotifierProvider(
+            create: (_) => sl<TripHistoryDetailViewModel>(),
+            child: TripHistoryDetailView(
+                tripId: state.pathParameters['tripId']!),
+          ),
+        ),
+        GoRoute(
+          path: AppRoutes.createReview,
+          builder: (context, state) => ChangeNotifierProvider(
+            create: (_) => sl<CreateReviewViewModel>(),
+            child:
+                CreateReviewView(tripId: state.pathParameters['tripId']!),
+          ),
+        ),
+        GoRoute(
+          path: AppRoutes.userReviews,
+          builder: (context, state) => ChangeNotifierProvider(
+            create: (_) => sl<UserReviewsViewModel>(),
+            child:
+                UserReviewsView(userId: state.pathParameters['userId']!),
+          ),
+        ),
+        GoRoute(
+          path: AppRoutes.sos,
+          builder: (context, state) => ChangeNotifierProvider(
+            create: (_) => sl<SosViewModel>(),
+            child: const SosView(),
+          ),
+        ),
+        GoRoute(
+          path: AppRoutes.addEmergencyContact,
+          builder: (context, state) => ChangeNotifierProvider(
+            create: (_) => sl<AddContactViewModel>(),
+            child: const AddEmergencyContactView(),
+          ),
+        ),
+        GoRoute(
+          path: AppRoutes.supportTickets,
+          builder: (context, state) => ChangeNotifierProvider(
+            create: (_) => sl<TicketsListViewModel>(),
+            child: const SupportTicketsView(),
+          ),
+        ),
+        GoRoute(
+          path: AppRoutes.supportTicketDetail,
+          builder: (context, state) => ChangeNotifierProvider(
+            create: (_) => sl<TicketDetailViewModel>(),
+            child: SupportTicketDetailView(
+                ticketId: state.pathParameters['id']!),
+          ),
+        ),
+        GoRoute(
+          path: AppRoutes.createSupportTicket,
+          builder: (context, state) => ChangeNotifierProvider(
+            create: (_) => sl<CreateTicketViewModel>(),
+            child: const CreateTicketView(),
           ),
         ),
       ];
