@@ -17,17 +17,18 @@ class UserModel extends UserEntity {
   });
 
   factory UserModel.fromJson(DataMap json) => UserModel(
-        id: json['id'] as String,
-        firstName: json['firstName'] as String,
-        lastName: json['lastName'] as String,
-        fullName: json['fullName'] as String,
-        email: json['email'] as String,
+        id: (json['id'] as String?) ?? '',
+        firstName: (json['firstName'] as String?) ?? '',
+        lastName: (json['lastName'] as String?) ?? '',
+        fullName: json['fullName'] as String? ??
+            '${json['firstName'] ?? ''} ${json['lastName'] ?? ''}',
+        email: (json['email'] as String?) ?? '',
         phone: json['phone'] as String? ?? '',
-        role: _parseRole(json['role'] as String),
-        status: _parseStatus(json['status'] as String),
+        role: _parseRole((json['role'] as String?) ?? ''),
+        status: _parseStatus((json['status'] as String?) ?? ''),
         profilePhotoUrl: json['profilePhotoUrl'] as String?,
         averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0.0,
-        createdAt: json['createdAt'] as String,
+        createdAt: (json['createdAt'] as String?) ?? '',
       );
 
   DataMap toJson() => {

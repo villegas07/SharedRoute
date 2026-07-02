@@ -14,13 +14,13 @@ class ReviewModel extends ReviewEntity {
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
     return ReviewModel(
-      id: json['id'] as String,
-      tripId: json['tripId'] as String,
-      reviewerId: json['reviewerId'] as String,
-      revieweeId: json['revieweeId'] as String,
-      rating: json['rating'] as int,
+      id: (json['id'] as String?) ?? '',
+      tripId: (json['tripId'] as String?) ?? '',
+      reviewerId: (json['reviewerId'] as String?) ?? '',
+      revieweeId: (json['revieweeId'] as String?) ?? '',
+      rating: (json['rating'] as num?)?.toInt() ?? 0,
       comment: json['comment'] as String?,
-      createdAt: json['createdAt'] as String,
+      createdAt: (json['createdAt'] as String?) ?? '',
     );
   }
 }
@@ -40,9 +40,9 @@ class RatingSummaryModel extends RatingSummaryEntity {
       breakdown[int.parse(key)] = (value as num).toInt();
     });
     return RatingSummaryModel(
-      userId: json['userId'] as String,
-      averageRating: (json['averageRating'] as num).toDouble(),
-      totalReviews: (json['totalReviews'] as num).toInt(),
+      userId: (json['userId'] as String?) ?? '',
+      averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0.0,
+      totalReviews: (json['totalReviews'] as num?)?.toInt() ?? 0,
       breakdown: breakdown,
     );
   }

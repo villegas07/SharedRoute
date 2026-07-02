@@ -19,7 +19,11 @@ class AuthRepositoryImpl implements AuthRepository {
   ResultFuture<UserEntity> login(String email, String password) async {
     try {
       final response = await _remoteDataSource.login(email, password);
-      await _tokenService.saveTokens(response.accessToken, response.refreshToken);
+      final accessToken = response.accessToken;
+      final refreshToken = response.refreshToken;
+      if (accessToken != null && refreshToken != null) {
+        await _tokenService.saveTokens(accessToken, refreshToken);
+      }
       return Right(response.user);
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
@@ -34,7 +38,11 @@ class AuthRepositoryImpl implements AuthRepository {
   ResultFuture<UserEntity> register(RegisterParams params) async {
     try {
       final response = await _remoteDataSource.register(params);
-      await _tokenService.saveTokens(response.accessToken, response.refreshToken);
+      final accessToken = response.accessToken;
+      final refreshToken = response.refreshToken;
+      if (accessToken != null && refreshToken != null) {
+        await _tokenService.saveTokens(accessToken, refreshToken);
+      }
       return Right(response.user);
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));

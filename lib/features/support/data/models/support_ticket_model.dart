@@ -15,13 +15,23 @@ class SupportTicketModel extends SupportTicketEntity {
 
   factory SupportTicketModel.fromJson(Map<String, dynamic> json) {
     return SupportTicketModel(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
-      subject: json['subject'] as String,
-      description: json['description'] as String,
-      status: TicketStatus.values.byName(json['status'] as String),
-      category: TicketCategory.values.byName(json['category'] as String),
-      createdAt: json['createdAt'] as String,
+      id: (json['id'] as String?) ?? '',
+      userId: (json['userId'] as String?) ?? '',
+      subject: (json['subject'] as String?) ?? '',
+      description: (json['description'] as String?) ?? '',
+      status: TicketStatus.values.firstWhere(
+        (e) =>
+            e.name.toUpperCase() ==
+            (json['status'] as String?)?.toUpperCase(),
+        orElse: () => TicketStatus.open,
+      ),
+      category: TicketCategory.values.firstWhere(
+        (e) =>
+            e.name.toUpperCase() ==
+            (json['category'] as String?)?.toUpperCase(),
+        orElse: () => TicketCategory.other,
+      ),
+      createdAt: (json['createdAt'] as String?) ?? '',
       response: json['response'] as String?,
       updatedAt: json['updatedAt'] as String?,
     );

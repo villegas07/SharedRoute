@@ -11,10 +11,10 @@ class PlacePredictionModel extends PlacePredictionEntity {
   });
 
   factory PlacePredictionModel.fromJson(DataMap json) => PlacePredictionModel(
-        placeId: json['placeId'] as String,
-        description: json['description'] as String,
-        mainText: json['mainText'] as String,
-        secondaryText: json['secondaryText'] as String,
+        placeId: (json['placeId'] as String?) ?? '',
+        description: (json['description'] as String?) ?? '',
+        mainText: (json['mainText'] as String?) ?? '',
+        secondaryText: (json['secondaryText'] as String?) ?? '',
       );
 }
 
@@ -30,12 +30,12 @@ class GeocodedAddressModel extends GeocodedAddressEntity {
   });
 
   factory GeocodedAddressModel.fromJson(DataMap json) => GeocodedAddressModel(
-        formattedAddress: json['formattedAddress'] as String,
-        city: json['city'] as String,
+        formattedAddress: (json['formattedAddress'] as String?) ?? '',
+        city: (json['city'] as String?) ?? '',
         department: json['department'] as String?,
         country: json['country'] as String?,
-        latitude: (json['latitude'] as num).toDouble(),
-        longitude: (json['longitude'] as num).toDouble(),
+        latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
+        longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
         placeId: json['placeId'] as String?,
       );
 }

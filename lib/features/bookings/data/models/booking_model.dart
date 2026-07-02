@@ -13,13 +13,13 @@ class BookingModel extends BookingEntity {
   });
 
   factory BookingModel.fromJson(DataMap json) => BookingModel(
-        id: json['id'] as String,
-        tripId: json['tripId'] as String,
-        passengerId: json['passengerId'] as String,
-        seatsReserved: json['seatsReserved'] as int,
-        totalPrice: (json['totalPrice'] as num).toDouble(),
-        status: _parseStatus(json['status'] as String),
-        createdAt: json['createdAt'] as String,
+        id: (json['id'] as String?) ?? '',
+        tripId: (json['tripId'] as String?) ?? '',
+        passengerId: (json['passengerId'] as String?) ?? '',
+        seatsReserved: (json['seatsReserved'] as num?)?.toInt() ?? 0,
+        totalPrice: (json['totalPrice'] as num?)?.toDouble() ?? 0.0,
+        status: _parseStatus((json['status'] as String?) ?? ''),
+        createdAt: (json['createdAt'] as String?) ?? '',
       );
 
   static BookingStatus _parseStatus(String value) {

@@ -23,25 +23,25 @@ class TripModel extends TripEntity {
   });
 
   factory TripModel.fromJson(DataMap json) => TripModel(
-        id: json['id'] as String,
-        driverId: json['driverId'] as String,
+        id: (json['id'] as String?) ?? '',
+        driverId: (json['driverId'] as String?) ?? '',
         vehicleId: json['vehicleId'] as String? ?? '',
-        originAddress: json['originAddress'] as String,
-        originCity: json['originCity'] as String,
+        originAddress: (json['originAddress'] as String?) ?? '',
+        originCity: (json['originCity'] as String?) ?? '',
         originLatitude: (json['originLatitude'] as num?)?.toDouble() ?? 0.0,
         originLongitude: (json['originLongitude'] as num?)?.toDouble() ?? 0.0,
-        destinationAddress: json['destinationAddress'] as String,
-        destinationCity: json['destinationCity'] as String,
+        destinationAddress: (json['destinationAddress'] as String?) ?? '',
+        destinationCity: (json['destinationCity'] as String?) ?? '',
         destinationLatitude:
             (json['destinationLatitude'] as num?)?.toDouble() ?? 0.0,
         destinationLongitude:
             (json['destinationLongitude'] as num?)?.toDouble() ?? 0.0,
-        departureAt: json['departureAt'] as String,
-        availableSeats: json['availableSeats'] as int,
-        pricePerSeat: (json['pricePerSeat'] as num).toDouble(),
-        status: _parseStatus(json['status'] as String),
+        departureAt: (json['departureAt'] as String?) ?? '',
+        availableSeats: (json['availableSeats'] as num?)?.toInt() ?? 0,
+        pricePerSeat: (json['pricePerSeat'] as num?)?.toDouble() ?? 0.0,
+        status: _parseStatus((json['status'] as String?) ?? ''),
         notes: json['notes'] as String?,
-        createdAt: json['createdAt'] as String,
+        createdAt: (json['createdAt'] as String?) ?? '',
       );
 
   static TripStatus _parseStatus(String value) {
