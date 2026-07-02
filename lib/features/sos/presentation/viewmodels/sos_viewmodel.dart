@@ -62,6 +62,8 @@ class SosViewModel extends ChangeNotifier {
     );
   }
 
+  Future<void> sendAlert() => triggerAlert();
+
   void resetAlertStatus() {
     _alertStatus = AlertStatus.idle;
     notifyListeners();

@@ -2,32 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/app_status_chip.dart';
 import '../../domain/entities/trip_entity.dart';
 
 class TripCard extends StatelessWidget {
   final TripEntity trip;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
-  const TripCard({super.key, required this.trip, required this.onTap});
+  const TripCard({super.key, required this.trip, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: _cardDecoration(),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.backgroundWhite,
+        borderRadius: BorderRadius.circular(20),
+        clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(18),
             child: Column(
               children: [
-                _CardHeader(trip: trip),
+                _TripHeader(trip: trip),
                 const SizedBox(height: 16),
-                _CardFooter(trip: trip),
+                _TripRoute(trip: trip),
+                const SizedBox(height: 16),
+                _TripFooter(trip: trip),
               ],
             ),
           ),
@@ -35,88 +36,52 @@ class TripCard extends StatelessWidget {
       ),
     );
   }
-
-  BoxDecoration _cardDecoration() {
-    return BoxDecoration(
-      color: AppColors.backgroundWhite,
-      borderRadius: BorderRadius.circular(24),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x120E3140),
-          blurRadius: 20,
-          offset: Offset(0, 10),
-        ),
-      ],
-    );
-  }
 }
 
-class _CardHeader extends StatelessWidget {
+class _TripHeader extends StatelessWidget {
   final TripEntity trip;
 
-  const _CardHeader({required this.trip});
+  const _TripHeader({required this.trip});
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _RouteIndicator(),
-        const SizedBox(width: 14),
-        Expanded(child: _RouteSummary(trip: trip)),
+        _DriverAvatar(driverId: trip.driverId),
         const SizedBox(width: 12),
-        _PriceBadge(price: _formatTripPrice(trip.pricePerSeat)),
+        Expanded(child: _HeaderInfo(trip: trip)),
+        _PriceBadge(price: trip.pricePerSeat),
       ],
     );
   }
 }
 
-class _RouteSummary extends StatelessWidget {
-  final TripEntity trip;
+class _DriverAvatar extends StatelessWidget {
+  final String driverId;
 
-  const _RouteSummary({required this.trip});
+  const _DriverAvatar({required this.driverId});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Ruta compartida', style: _eyebrowStyle(context)),
-        const SizedBox(height: 10),
-        _StopText(
-          city: trip.originCity,
-          label: 'Salida',
-          color: AppColors.primary,
-        ),
-        const SizedBox(height: 14),
-        _StopText(
-          city: trip.destinationCity,
-          label: 'Destino',
-          color: AppColors.accentCoral,
-        ),
-      ],
+    return CircleAvatar(
+      radius: 20,
+      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+      child: Text(
+        _initial(),
+        style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700),
+      ),
     );
   }
 
-  TextStyle? _eyebrowStyle(BuildContext context) {
-    return Theme.of(context).textTheme.labelMedium?.copyWith(
-      color: AppColors.textSecondary,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0.4,
-    );
+  String _initial() {
+    return driverId.isNotEmpty ? driverId[0].toUpperCase() : 'C';
   }
 }
 
-class _StopText extends StatelessWidget {
-  final String city;
-  final String label;
-  final Color color;
+class _HeaderInfo extends StatelessWidget {
+  final TripEntity trip;
 
-  const _StopText({
-    required this.city,
-    required this.label,
-    required this.color,
-  });
+  const _HeaderInfo({required this.trip});
 
   @override
   Widget build(BuildContext context) {
@@ -124,206 +89,146 @@ class _StopText extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: theme.bodySmall?.copyWith(color: color)),
-        const SizedBox(height: 2),
-        Text(
-          city,
-          style: theme.titleMedium?.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        Text(_driverLabel(), style: theme.titleMedium),
+        Text(_formatDateTime(trip.departureAt), style: theme.bodySmall),
       ],
     );
+  }
+
+  String _driverLabel() {
+    return trip.driverId.isNotEmpty ? 'Conductor #${trip.driverId.substring(0, 8)}' : 'Conductor';
+  }
+
+  String _formatDateTime(String value) {
+    final date = DateTime.tryParse(value);
+    if (date == null) return value;
+    return DateFormat('EEE dd MMM, HH:mm', 'es').format(date);
   }
 }
 
 class _PriceBadge extends StatelessWidget {
-  final String price;
+  final double price;
 
   const _PriceBadge({required this.price});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: _decoration(),
-      child: Column(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        '\$${price.toStringAsFixed(0)}',
+        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+class _TripRoute extends StatelessWidget {
+  final TripEntity trip;
+
+  const _TripRoute({required this.trip});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundAlt,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
         children: [
-          Text(
-            price,
-            style: theme.titleMedium?.copyWith(color: AppColors.primaryDark),
-          ),
-          Text(
-            '/asiento',
-            style: theme.bodySmall?.copyWith(color: AppColors.primaryDark),
-          ),
+          const _TripDots(),
+          const SizedBox(width: 14),
+          Expanded(child: _LocationText(trip: trip)),
         ],
       ),
     );
   }
-
-  BoxDecoration _decoration() {
-    return BoxDecoration(
-      color: AppColors.primaryLight,
-      borderRadius: BorderRadius.circular(16),
-    );
-  }
 }
 
-class _CardFooter extends StatelessWidget {
-  final TripEntity trip;
-
-  const _CardFooter({required this.trip});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _MetaChip(data: _dateChip(trip.departureAt)),
-        const SizedBox(width: 8),
-        _MetaChip(data: _seatChip(trip.availableSeats)),
-        const Spacer(),
-        AppStatusChip(status: _mapTripStatus(trip.status)),
-      ],
-    );
-  }
-}
-
-class _RouteIndicator extends StatelessWidget {
-  const _RouteIndicator();
+class _TripDots extends StatelessWidget {
+  const _TripDots();
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _IndicatorDot(color: AppColors.primary, ring: AppColors.primaryLight),
-        Container(
-          width: 2,
-          height: 30,
-          margin: const EdgeInsets.symmetric(vertical: 2),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [AppColors.primary, AppColors.accentCoral],
-            ),
-          ),
-        ),
-        _IndicatorDot(
-          color: AppColors.accentCoral,
-          ring: AppColors.accentCoralLight,
-        ),
+        const _Dot(color: AppColors.success),
+        Container(width: 2, height: 22, color: AppColors.textDisabled.withValues(alpha: 0.3)),
+        const _Dot(color: AppColors.accentCoral),
       ],
     );
   }
 }
 
-class _IndicatorDot extends StatelessWidget {
+class _LocationText extends StatelessWidget {
+  final TripEntity trip;
+
+  const _LocationText({required this.trip});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.titleMedium;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(_origin(), style: style, maxLines: 1, overflow: TextOverflow.ellipsis),
+        const SizedBox(height: 10),
+        Text(_destination(), style: style, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ],
+    );
+  }
+
+  String _origin() => trip.originCity.isNotEmpty ? trip.originCity : 'Origen';
+
+  String _destination() {
+    return trip.destinationCity.isNotEmpty ? trip.destinationCity : 'Destino';
+  }
+}
+
+class _Dot extends StatelessWidget {
   final Color color;
-  final Color ring;
 
-  const _IndicatorDot({required this.color, required this.ring});
+  const _Dot({required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 12,
-      height: 12,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: ring, width: 2),
-      ),
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }
 
-class _MetaChipData {
-  final IconData icon;
-  final String text;
-  final Color tint;
+class _TripFooter extends StatelessWidget {
+  final TripEntity trip;
 
-  const _MetaChipData({
-    required this.icon,
-    required this.text,
-    required this.tint,
-  });
-}
-
-class _MetaChip extends StatelessWidget {
-  final _MetaChipData data;
-
-  const _MetaChip({required this.data});
+  const _TripFooter({required this.trip});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: _decoration(),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(data.icon, size: 14, color: data.tint),
-          const SizedBox(width: 5),
-          Text(
-            data.text,
-            style: theme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
+    final style = Theme.of(context).textTheme.bodySmall;
+    return Row(
+      children: [
+        const Icon(Icons.airline_seat_recline_normal, size: 16, color: AppColors.textSecondary),
+        const SizedBox(width: 4),
+        Text('${trip.availableSeats} disponibles', style: style),
+        const SizedBox(width: 16),
+        const Icon(Icons.directions_car_rounded, size: 16, color: AppColors.textSecondary),
+        const SizedBox(width: 4),
+        Expanded(child: Text(_vehicleInfo(), style: style, overflow: TextOverflow.ellipsis)),
+      ],
     );
   }
 
-  BoxDecoration _decoration() {
-    return BoxDecoration(
-      color: AppColors.backgroundAlt,
-      borderRadius: BorderRadius.circular(12),
-    );
+  String _vehicleInfo() {
+    if (trip.vehicleId.isEmpty) return 'Vehículo por confirmar';
+    return 'Vehículo #${trip.vehicleId.substring(0, 8)}';
   }
-}
-
-_MetaChipData _dateChip(String isoDate) {
-  return _MetaChipData(
-    icon: Icons.schedule_rounded,
-    text: _formatTripDate(isoDate),
-    tint: AppColors.secondary,
-  );
-}
-
-_MetaChipData _seatChip(int seats) {
-  return _MetaChipData(
-    icon: Icons.airline_seat_recline_normal_rounded,
-    text: '$seats disp.',
-    tint: AppColors.success,
-  );
-}
-
-String _formatTripPrice(double price) {
-  return NumberFormat.currency(
-    locale: 'es_CO',
-    symbol: '\$',
-    decimalDigits: 0,
-  ).format(price);
-}
-
-String _formatTripDate(String isoDate) {
-  try {
-    final date = DateTime.parse(isoDate).toLocal();
-    return DateFormat('dd MMM, HH:mm', 'es_CO').format(date);
-  } catch (_) {
-    return isoDate;
-  }
-}
-
-AppChipStatus _mapTripStatus(TripStatus status) {
-  return switch (status) {
-    TripStatus.draft => AppChipStatus.draft,
-    TripStatus.published => AppChipStatus.published,
-    TripStatus.inProgress => AppChipStatus.inProgress,
-    TripStatus.completed => AppChipStatus.completed,
-    TripStatus.cancelled => AppChipStatus.cancelled,
-  };
 }

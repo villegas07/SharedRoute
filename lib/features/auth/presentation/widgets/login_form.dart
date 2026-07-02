@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -12,181 +15,385 @@ class LoginForm extends StatefulWidget {
   State<LoginForm> createState() => _LoginFormState();
 }
 
-class _LoginFormState extends State<LoginForm> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+class _LoginFormState extends State<LoginForm>
+    with SingleTickerProviderStateMixin {
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
   final _formKey = GlobalKey<FormState>();
-  bool _obscurePassword = true;
+
+  late final AnimationController _shakeCtrl;
+  late final Animation<double> _shakeAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _shakeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _shakeAnim = CurvedAnimation(parent: _shakeCtrl, curve: Curves.elasticOut);
+  }
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    _shakeCtrl.dispose();
     super.dispose();
   }
 
-  void _submit(AuthViewModel viewModel) {
-    if (!_formKey.currentState!.validate()) return;
-    viewModel.login(_emailController.text.trim(), _passwordController.text);
+  void _submit(AuthViewModel vm) {
+    if (!_formKey.currentState!.validate()) {
+      _triggerShake();
+      return;
+    }
+    vm.login(_emailCtrl.text.trim(), _passwordCtrl.text);
+  }
+
+  void _triggerShake() {
+    HapticFeedback.mediumImpact();
+    _shakeCtrl.forward(from: 0);
   }
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<AuthViewModel>();
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildEmailField(),
-          const SizedBox(height: 16),
-          _buildPasswordField(),
-          _buildError(viewModel),
-          const SizedBox(height: 28),
-          _SubmitButton(
-            isLoading: viewModel.isLoading,
-            onPressed: () => _submit(viewModel),
-          ),
-        ],
+    final vm = context.watch<AuthViewModel>();
+    return AnimatedBuilder(
+      animation: _shakeAnim,
+      builder: (_, child) {
+        return Transform.translate(
+          offset: Offset(_shakeOffset(), 0),
+          child: child,
+        );
+      },
+      child: _FormContent(formKey: _formKey, child: _fields(vm)),
+    );
+  }
+
+  Widget _fields(AuthViewModel vm) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _EmailField(controller: _emailCtrl, focusNode: _emailFocus),
+        const SizedBox(height: 16),
+        _PasswordField(
+          controller: _passwordCtrl,
+          focusNode: _passwordFocus,
+          onSubmit: () => _submit(vm),
+        ),
+        _ErrorSection(message: vm.errorMessage),
+        const SizedBox(height: 28),
+        _GradientSubmitButton(
+          isLoading: vm.isLoading,
+          onPressed: () => _submit(vm),
+        ),
+      ],
+    );
+  }
+
+  double _shakeOffset() {
+    final wave = math.sin(_shakeCtrl.value * math.pi * 8);
+    return wave * 12 * _shakeAnim.value;
+  }
+}
+
+class _FormContent extends StatelessWidget {
+  final GlobalKey<FormState> formKey;
+  final Widget child;
+
+  const _FormContent({required this.formKey, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(key: formKey, child: child);
+  }
+}
+
+class _AnimatedFieldShell extends StatelessWidget {
+  final FocusNode focusNode;
+  final Widget child;
+
+  const _AnimatedFieldShell({required this.focusNode, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: focusNode,
+      child: child,
+      builder: (context, innerChild) {
+        return AnimatedScale(
+          duration: const Duration(milliseconds: 180),
+          scale: focusNode.hasFocus ? 1.015 : 1,
+          curve: Curves.easeOutCubic,
+          child: innerChild,
+        );
+      },
+    );
+  }
+}
+
+class _EmailField extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+
+  const _EmailField({required this.controller, required this.focusNode});
+
+  @override
+  Widget build(BuildContext context) {
+    return _AnimatedFieldShell(
+      focusNode: focusNode,
+      child: TextFormField(
+        controller: controller,
+        focusNode: focusNode,
+        keyboardType: TextInputType.emailAddress,
+        textInputAction: TextInputAction.next,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+        decoration: _decoration(),
+        validator: _validate,
       ),
     );
   }
 
-  Widget _buildEmailField() {
-    return TextFormField(
-      controller: _emailController,
-      keyboardType: TextInputType.emailAddress,
-      textInputAction: TextInputAction.next,
-      decoration: _decoration(AppStrings.email, Icons.email_outlined),
-      validator: _validateEmail,
-    );
-  }
-
-  Widget _buildPasswordField() {
-    return TextFormField(
-      controller: _passwordController,
-      obscureText: _obscurePassword,
-      textInputAction: TextInputAction.done,
-      onFieldSubmitted: (_) => _submit(context.read<AuthViewModel>()),
-      decoration: _passwordDecoration(),
-      validator: _validatePassword,
-    );
-  }
-
-  Widget _buildError(AuthViewModel viewModel) {
-    if (viewModel.errorMessage == null) return const SizedBox(height: 0);
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: _ErrorBanner(viewModel.errorMessage!),
-    );
-  }
-
-  InputDecoration _decoration(String label, IconData icon) {
+  InputDecoration _decoration() {
     return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon),
-      filled: true,
-      fillColor: AppColors.backgroundAlt,
-      border: _border(),
-      enabledBorder: _border(),
-      focusedBorder: _border(AppColors.primary),
-    );
-  }
-
-  InputDecoration _passwordDecoration() {
-    return _decoration(AppStrings.password, Icons.lock_outlined).copyWith(
-      suffixIcon: IconButton(
-        icon: Icon(_passwordIcon(), color: AppColors.textSecondary),
-        onPressed: _togglePassword,
+      labelText: AppStrings.email,
+      hintText: 'correo@ejemplo.com',
+      prefixIcon: const _PrefixIcon(
+        icon: Icons.email_outlined,
+        color: AppColors.secondary,
       ),
     );
   }
 
-  OutlineInputBorder _border([Color color = Colors.transparent]) {
-    return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18),
-      borderSide: BorderSide(color: color, width: 1.2),
-    );
-  }
-
-  IconData _passwordIcon() {
-    return _obscurePassword
-        ? Icons.visibility_outlined
-        : Icons.visibility_off_outlined;
-  }
-
-  void _togglePassword() {
-    setState(() => _obscurePassword = !_obscurePassword);
-  }
-
-  String? _validateEmail(String? value) {
+  String? _validate(String? value) {
     if (value == null || value.isEmpty) return AppStrings.fieldRequired;
     if (!value.contains('@')) return 'Correo inválido';
     return null;
   }
+}
 
-  String? _validatePassword(String? value) {
+class _PasswordField extends StatefulWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final VoidCallback onSubmit;
+
+  const _PasswordField({
+    required this.controller,
+    required this.focusNode,
+    required this.onSubmit,
+  });
+
+  @override
+  State<_PasswordField> createState() => _PasswordFieldState();
+}
+
+class _PasswordFieldState extends State<_PasswordField> {
+  bool _obscure = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return _AnimatedFieldShell(
+      focusNode: widget.focusNode,
+      child: TextFormField(
+        controller: widget.controller,
+        focusNode: widget.focusNode,
+        obscureText: _obscure,
+        textInputAction: TextInputAction.done,
+        onFieldSubmitted: (_) => widget.onSubmit(),
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+        decoration: _decoration(),
+        validator: _validate,
+      ),
+    );
+  }
+
+  InputDecoration _decoration() {
+    return InputDecoration(
+      labelText: AppStrings.password,
+      prefixIcon: const _PrefixIcon(
+        icon: Icons.lock_outlined,
+        color: AppColors.primary,
+      ),
+      suffixIcon: IconButton(
+        onPressed: _toggle,
+        icon: Icon(
+          _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+          color: AppColors.textSecondary,
+          size: 20,
+        ),
+      ),
+    );
+  }
+
+  void _toggle() {
+    setState(() => _obscure = !_obscure);
+  }
+
+  String? _validate(String? value) {
     if (value == null || value.isEmpty) return AppStrings.fieldRequired;
     if (value.length < 6) return 'Mínimo 6 caracteres';
     return null;
   }
 }
 
-class _ErrorBanner extends StatelessWidget {
-  final String message;
+class _PrefixIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
 
-  const _ErrorBanner(this.message);
+  const _PrefixIcon({required this.icon, required this.color});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Padding(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.accentCoralLight,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(children: [_icon(), const SizedBox(width: 8), _text()]),
-    );
-  }
-
-  Widget _icon() {
-    return const Icon(
-      Icons.error_outline_rounded,
-      color: AppColors.error,
-      size: 18,
-    );
-  }
-
-  Widget _text() {
-    return Expanded(
-      child: Text(
-        message,
-        style: const TextStyle(
-          color: AppColors.error,
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
         ),
+        child: Icon(icon, color: color, size: 18),
       ),
     );
   }
 }
 
-class _SubmitButton extends StatelessWidget {
-  final bool isLoading;
-  final VoidCallback onPressed;
+class _ErrorSection extends StatelessWidget {
+  final String? message;
 
-  const _SubmitButton({required this.isLoading, required this.onPressed});
+  const _ErrorSection({required this.message});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 56,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        child: isLoading
-            ? const _LoadingIndicator()
-            : const Text(AppStrings.loginButton),
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 260),
+        transitionBuilder: _transition,
+        child: message == null
+            ? const SizedBox.shrink()
+            : _ErrorBanner(message: message!),
       ),
+    );
+  }
+
+  Widget _transition(Widget child, Animation<double> animation) {
+    return FadeTransition(
+      opacity: animation,
+      child: SizeTransition(sizeFactor: animation, child: child),
+    );
+  }
+}
+
+class _ErrorBanner extends StatelessWidget {
+  final String message;
+
+  const _ErrorBanner({required this.message})
+    : super(key: const ValueKey('error'));
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, color: AppColors.error, size: 18),
+          const SizedBox(width: 10),
+          Expanded(child: _ErrorText(message: message)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorText extends StatelessWidget {
+  final String message;
+
+  const _ErrorText({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      message,
+      style: const TextStyle(
+        color: AppColors.error,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+}
+
+class _GradientSubmitButton extends StatelessWidget {
+  final bool isLoading;
+  final VoidCallback onPressed;
+
+  const _GradientSubmitButton({
+    required this.isLoading,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      height: 56,
+      decoration: _decoration(),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isLoading ? null : onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: Center(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              child: _content(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  BoxDecoration _decoration() {
+    return BoxDecoration(
+      gradient: LinearGradient(
+        colors: isLoading
+            ? [AppColors.primaryLight, AppColors.secondaryLight]
+            : [AppColors.primary, AppColors.secondary],
+      ),
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: isLoading ? [] : [_shadow()],
+    );
+  }
+
+  Widget _content() {
+    if (isLoading) return const _LoadingIndicator();
+    return const Text(
+      AppStrings.loginButton,
+      key: ValueKey('label'),
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+
+  BoxShadow _shadow() {
+    return BoxShadow(
+      color: AppColors.primary.withValues(alpha: 0.3),
+      blurRadius: 16,
+      offset: const Offset(0, 6),
     );
   }
 }
@@ -197,6 +404,7 @@ class _LoadingIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const SizedBox(
+      key: ValueKey('loading'),
       height: 22,
       width: 22,
       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),

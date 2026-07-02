@@ -64,10 +64,26 @@ class _HeaderBody extends StatelessWidget {
       children: [
         _HeaderBackButton(),
         SizedBox(height: 20),
+        _LogoBrand(),
+        SizedBox(height: 16),
         _HeaderTitle(),
         SizedBox(height: 8),
         _HeaderSubtitle(),
       ],
+    );
+  }
+}
+
+class _LogoBrand extends StatelessWidget {
+  const _LogoBrand();
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      'assets/images/logo.png',
+      width: 100,
+      height: 100,
+      fit: BoxFit.contain,
     );
   }
 }

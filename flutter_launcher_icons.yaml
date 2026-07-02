@@ -1,0 +1,13 @@
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/logo.png"
+  min_sdk_android: 21
+
+  # Icono adaptativo Android 8+ (con fondo azul claro de la app)
+  adaptive_icon_background: "#E0F4FB"
+  adaptive_icon_foreground: "assets/images/logo.png"
+
+  # iOS: fondo azul claro
+  remove_alpha_ios: true
+  background_color_ios: "#E0F4FB"
