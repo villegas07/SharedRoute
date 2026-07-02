@@ -19,27 +19,48 @@ class AppErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 56, color: AppColors.textDisabled),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            if (onRetry != null) ...[
-              const SizedBox(height: 20),
-              OutlinedButton.icon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: const Text(AppStrings.retry),
-              ),
-            ],
+            _buildIcon(),
+            const SizedBox(height: 20),
+            _buildMessage(context),
+            if (onRetry != null) _buildRetryButton(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildIcon() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: AppColors.backgroundAlt,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, size: 48, color: AppColors.textDisabled),
+    );
+  }
+
+  Widget _buildMessage(BuildContext context) {
+    return Text(
+      message,
+      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: AppColors.textSecondary,
+          ),
+      textAlign: TextAlign.center,
+    );
+  }
+
+  Widget _buildRetryButton() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: OutlinedButton.icon(
+        onPressed: onRetry,
+        icon: const Icon(Icons.refresh_rounded, size: 18),
+        label: const Text(AppStrings.retry),
       ),
     );
   }
