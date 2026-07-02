@@ -4,22 +4,57 @@ import '../../domain/entities/user_entity.dart';
 class UserModel extends UserEntity {
   const UserModel({
     required super.id,
-    required super.name,
+    required super.firstName,
+    required super.lastName,
+    required super.fullName,
     required super.email,
-    super.photoUrl,
+    required super.phone,
+    required super.role,
+    required super.status,
+    super.profilePhotoUrl,
+    required super.averageRating,
+    required super.createdAt,
   });
 
   factory UserModel.fromJson(DataMap json) => UserModel(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        email: json['email'] as String,
-        photoUrl: json['photoUrl'] as String?,
+        id: (json['id'] as String?) ?? '',
+        firstName: (json['firstName'] as String?) ?? '',
+        lastName: (json['lastName'] as String?) ?? '',
+        fullName: json['fullName'] as String? ??
+            '${json['firstName'] ?? ''} ${json['lastName'] ?? ''}',
+        email: (json['email'] as String?) ?? '',
+        phone: json['phone'] as String? ?? '',
+        role: _parseRole((json['role'] as String?) ?? ''),
+        status: _parseStatus((json['status'] as String?) ?? ''),
+        profilePhotoUrl: json['profilePhotoUrl'] as String?,
+        averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0.0,
+        createdAt: (json['createdAt'] as String?) ?? '',
       );
 
   DataMap toJson() => {
-        'id': id,
-        'name': name,
+        'firstName': firstName,
+        'lastName': lastName,
         'email': email,
-        if (photoUrl != null) 'photoUrl': photoUrl,
+        'phone': phone,
+        if (profilePhotoUrl != null) 'profilePhotoUrl': profilePhotoUrl,
       };
+
+  static UserRole _parseRole(String value) {
+    const map = {
+      'PASSENGER': UserRole.passenger,
+      'DRIVER': UserRole.driver,
+      'ADMIN': UserRole.admin,
+    };
+    return map[value.toUpperCase()] ?? UserRole.passenger;
+  }
+
+  static UserStatus _parseStatus(String value) {
+    const map = {
+      'ACTIVE': UserStatus.active,
+      'INACTIVE': UserStatus.inactive,
+      'SUSPENDED': UserStatus.suspended,
+      'PENDING_VERIFICATION': UserStatus.pendingVerification,
+    };
+    return map[value.toUpperCase()] ?? UserStatus.active;
+  }
 }
