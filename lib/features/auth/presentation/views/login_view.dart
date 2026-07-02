@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/router/app_routes.dart';
 import '../widgets/login_form.dart';
 
 class LoginView extends StatelessWidget {
@@ -20,6 +23,8 @@ class LoginView extends StatelessWidget {
               _buildHeader(context),
               const SizedBox(height: 48),
               const LoginForm(),
+              const SizedBox(height: 24),
+              _buildFooterLinks(context),
             ],
           ),
         ),
@@ -31,7 +36,7 @@ class LoginView extends StatelessWidget {
     return Column(
       children: [
         const Icon(Icons.directions_car_rounded,
-            size: 72, color: Color(0xFF7C4DC4)),
+            size: 72, color: AppColors.primary),
         const SizedBox(height: 16),
         Text(
           AppStrings.appName,
@@ -43,6 +48,30 @@ class LoginView extends StatelessWidget {
           AppStrings.tagline,
           style: Theme.of(context).textTheme.bodyMedium,
           textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFooterLinks(BuildContext context) {
+    return Column(
+      children: [
+        TextButton(
+          onPressed: () => context.push(AppRoutes.forgotPassword),
+          child: const Text(AppStrings.forgotPassword),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              AppStrings.noAccount,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            TextButton(
+              onPressed: () => context.push(AppRoutes.register),
+              child: const Text(AppStrings.registerLink),
+            ),
+          ],
         ),
       ],
     );
